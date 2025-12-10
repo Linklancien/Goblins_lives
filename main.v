@@ -1,5 +1,10 @@
 module main
 
+struct App{
+
+}
+
 fn main() {
-	println('Hello World!')
+	mut app := &App{}
+	
 }
