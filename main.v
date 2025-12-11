@@ -44,6 +44,7 @@ mut:
 
 enum Task {
 	idle
+	exhaust
 	working
 }
 
@@ -62,19 +63,32 @@ fn create_basic() &Gobs {
 	}
 }
 
+// brain neurones
+// conditional
+fn is_exhaust(data App) bool{
+	return data.gobs[data.id].doing == .exhaust
+}
+
 fn is_working(data App) bool {
 	return data.gobs[data.id].doing == .working
 }
 
-fn work_fn(mut data App) {
-	println('I, ${data.id}, am working')
-	data.gobs[data.id].doing = .idle
-}
-
+// actions
 fn idle_fn(mut data App) {
 	println('I, ${data.id}, am juste chilling')
 	data.gobs[data.id].doing = .working
 }
+
+fn exhaust_fn(mut data App) {
+	println('I, ${data.id}, am not exhaust anymore')
+	data.gobs[data.id].doing = .idle
+}
+
+fn work_fn(mut data App) {
+	println('I, ${data.id}, am working')
+	data.gobs[data.id].doing = .exhaust
+}
+
 
 // Use:
 fn (gob Gobs) reflect(mut app App) {
