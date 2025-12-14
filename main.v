@@ -75,18 +75,9 @@ fn creat_random(depth int, proba_action f64) &Gobs {
 
 fn random_brain(depth int, proba_action f64) Node[App] {
 	mut node := Node[App]{}
-	asfn := [idle_fn, exhaust_fn, work_fn]
-	if depth == 0 {
-		afn := rand.element[Action_fn[App]](asfn) or {
-			panic('At depth == ${depth}, rand action failled with prob: ${proba_action}')
-		}
-		node = Action_node[App]{
-			action: afn
-		}
-		return node
-	}
 
-	if rand.bernoulli(proba_action)or {panic('Bernouilli failled ${depth}')} {
+	if depth == 0 && rand.bernoulli(proba_action) or { panic('Bernouilli failled ${depth}') } {
+		asfn := [idle_fn, exhaust_fn, work_fn]
 		afn := rand.element[Action_fn[App]](asfn) or {
 			panic('At depth == ${depth}, rand action failled with prob: ${proba_action}')
 		}
