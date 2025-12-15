@@ -1,46 +1,56 @@
 module main
 
-import linklancien.decision_graph { Action_fn, Action_node, Conditionnal_node, Evaluation_fn, Node }
+import linklancien.decision_graph { Action_fn, Action_node, Conditionnal_node, Evaluation_fn, Result, Node }
 import rand
 // import linklancien.gg_plot
 import gg
 
-struct App {
+struct Welt {
 mut:
 	ctx  &gg.Context = unsafe { nil }
-	id   int
 	gobs []Gobs
 }
 
+fn (welt Welt) get_umwelt(id int) Result {
+	mut umwelt := Result{}
+	return umwelt
+}
+
+fn (mut welt Welt) apply(changes Result, id int) {
+	if doing_int := changes['doing'] {
+		// change the current task of the selected gob
+		welt.gobs[id].doing = Task.from(doing_int) or {Task.idle}
+	}
+}
+
 fn main() {
-	mut app := &App{}
-	app.ctx = gg.new_context(
+	mut welt := &Welt{}
+	welt.ctx = gg.new_context(
 		fullscreen:    false
 		width:         600
 		height:        600
 		create_window: true
 		window_title:  '-Goblins Lives-'
 		bg_color:      gg.gray
-		user_data:     app
+		user_data:     welt
 		frame_fn:      on_frame
 		sample_count:  4
 	)
-	// app.gobs << create_basic()
-	app.gobs << creat_random(2, 0.5)
-	println(app.gobs)
-	app.ctx.run()
+	// welt.gobs << create_basic()
+	// welt.gobs << creat_random(2, 0.5)
+	println(welt.gobs)
+	welt.ctx.run()
 }
 
-fn on_frame(mut app App) {
-	for i, gob in app.gobs {
-		app.id = i
-		gob.reflect(mut app)
+fn on_frame(mut welt Welt) {
+	for i, gob in welt.gobs {
+		gob.reflect(mut welt, i)
 	}
 }
 
 // Gobs
 struct Gobs {
-	brain Node[App]
+	brain Node
 mut:
 	doing Task
 }
@@ -54,12 +64,12 @@ enum Task {
 // Init:
 fn create_basic() &Gobs {
 	return &Gobs{
-		brain: Conditionnal_node[App]{
+		brain: Conditionnal_node{
 			evaluation: is_working
-			true_next:  Action_node[App]{
+			true_next:  Action_node{
 				action: work_fn
 			}
-			false_next: Action_node[App]{
+			false_next: Action_node{
 				action: idle_fn
 			}
 		}
@@ -73,30 +83,30 @@ fn creat_random(depth int, proba_action f64) &Gobs {
 	}
 }
 
-fn random_brain(depth int, proba_action f64) Node[App] {
-	mut node := Node[App]{}
+fn random_brain(depth int, proba_action f64) Node {
+	mut node := Node{}
 
 	if depth == 0 && rand.bernoulli(proba_action) or { panic('Bernouilli failled ${depth}') } {
-		asfn := [idle_fn, exhaust_fn, work_fn]
-		afn := rand.element[Action_fn[App]](asfn) or {
-			panic('At depth == ${depth}, rand action failled with prob: ${proba_action}')
-		}
-		node = Action_node[App]{
-			action: afn
-		}
+		// asfn := [idle_fn, exhaust_fn, work_fn]
+		// afn := rand.element[Action_fn](asfn) or {
+		// 	panic('At depth == ${depth}, rand action failled with prob: ${proba_action}')
+		// }
+		// node = Action_node{
+		// 	action: afn
+		// }
 	} else {
-		csfn := [is_exhaust, is_working]
-		cfn := rand.element[Evaluation_fn[App]](csfn) or {
-			panic('At depth == ${depth}, rand conditionnal failled with prob: ${proba_action}')
-		}
-		nodet := random_brain(depth - 1, proba_action)
-		nodef := random_brain(depth - 1, proba_action)
+		// csfn := [is_exhaust, is_working]
+		// cfn := rand.element[Evaluation_fn](csfn) or {
+		// 	panic('At depth == ${depth}, rand conditionnal failled with prob: ${proba_action}')
+		// }
+		// nodet := random_brain(depth - 1, proba_action)
+		// nodef := random_brain(depth - 1, proba_action)
 
-		node = Conditionnal_node[App]{
-			evaluation: cfn
-			true_next:  nodet
-			false_next: nodef
-		}
+		// node = Conditionnal_node{
+		// 	evaluation: cfn
+		// 	true_next:  nodet
+		// 	false_next: nodef
+		// }
 	}
 
 	return node
@@ -104,31 +114,40 @@ fn random_brain(depth int, proba_action f64) Node[App] {
 
 // brain neurones
 // conditional
-fn is_exhaust(data App) bool {
-	return data.gobs[data.id].doing == .exhaust
+fn is_exhaust(umwelt Result) bool {
+	return umwelt['doing'] == int(Task.exhaust)
 }
 
-fn is_working(data App) bool {
-	return data.gobs[data.id].doing == .working
+fn is_working(umwelt Result) bool {
+	return umwelt['doing'] == int(Task.working)
 }
 
 // actions
-fn idle_fn(mut data App) {
-	println('I, ${data.id}, am juste chilling')
-	data.gobs[data.id].doing = .working
+fn idle_fn(umwelt Result) Result {
+	println('I, am juste chilling')
+	mut res := Result{}
+	res['doing'] = int(Task.working)
+	return res
 }
 
-fn exhaust_fn(mut data App) {
-	println('I, ${data.id}, am not exhaust anymore')
-	data.gobs[data.id].doing = .idle
+fn exhaust_fn(umwelt Result) Result {
+	println('I, am not exhaust anymore')
+	mut res := Result{}
+	res['doing'] = int(Task.idle)
+	return res
 }
 
-fn work_fn(mut data App) {
-	println('I, ${data.id}, am working')
-	data.gobs[data.id].doing = .exhaust
+fn work_fn(umwelt Result) Result {
+	println('I, am working')
+	mut res := Result{}
+	res['doing'] = int(Task.exhaust)
+	return res
 }
 
 // Use:
-fn (gob Gobs) reflect(mut app App) {
-	gob.brain.do(mut app)
+fn (gob Gobs) reflect(mut welt Welt, id int) {
+	// reflect
+	res := gob.brain.do(welt.get_umwelt(id))
+	// act
+	welt.apply(res, id)
 }
