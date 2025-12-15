@@ -1,6 +1,6 @@
 module main
 
-import linklancien.decision_graph { Action_fn, Action_node, Conditionnal_node, Evaluation_fn, Result, Node }
+import linklancien.decision_graph { Action_node, Conditionnal_node, Node, Result }
 import rand
 // import linklancien.gg_plot
 import gg
@@ -20,7 +20,9 @@ fn (welt Welt) get_umwelt(id int) Result {
 fn (mut welt Welt) apply(changes Result, id int) {
 	if doing_int := changes['doing'] {
 		// change the current task of the selected gob
-		welt.gobs[id].doing = Task.from(int(doing_int)) or {panic('error, doing could not change in apply')}
+		welt.gobs[id].doing = Task.from(int(doing_int)) or {
+			panic('error, doing could not change in apply')
+		}
 	}
 }
 
