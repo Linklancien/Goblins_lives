@@ -13,13 +13,14 @@ mut:
 
 fn (welt Welt) get_umwelt(id int) Result {
 	mut umwelt := Result{}
+	umwelt['doing'] = int(welt.gobs[id].doing)
 	return umwelt
 }
 
 fn (mut welt Welt) apply(changes Result, id int) {
 	if doing_int := changes['doing'] {
 		// change the current task of the selected gob
-		welt.gobs[id].doing = Task.from(doing_int) or {Task.idle}
+		welt.gobs[id].doing = Task.from(int(doing_int)) or {panic('error, doing could not change in apply')}
 	}
 }
 
@@ -36,7 +37,7 @@ fn main() {
 		frame_fn:      on_frame
 		sample_count:  4
 	)
-	// welt.gobs << create_basic()
+	welt.gobs << create_basic()
 	// welt.gobs << creat_random(2, 0.5)
 	println(welt.gobs)
 	welt.ctx.run()
@@ -119,6 +120,7 @@ fn is_exhaust(umwelt Result) bool {
 }
 
 fn is_working(umwelt Result) bool {
+	println('Am I working ? ${umwelt['doing'] == int(Task.working)} ')
 	return umwelt['doing'] == int(Task.working)
 }
 
