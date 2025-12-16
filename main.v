@@ -117,35 +117,39 @@ fn random_brain(depth int, proba_action f64) Node {
 
 // brain neurones
 // conditional
+fn is_key_equal_value(umwelt Result, key string, value int) bool {
+	return umwelt[key] == value
+}
+
 fn is_exhaust(umwelt Result) bool {
-	return umwelt['doing'] == int(Task.exhaust)
+	return is_key_equal_value(umwelt, 'doing', int(Task.exhaust))
 }
 
 fn is_working(umwelt Result) bool {
 	println('Am I working ? ${umwelt['doing'] == int(Task.working)} ')
-	return umwelt['doing'] == int(Task.working)
+	return is_key_equal_value(umwelt, 'doing', int(Task.working))
 }
 
 // actions
+fn action_fn(umwelt Result, key string, value int) Result{
+	mut res := Result{}
+	res[key] = value
+	return res
+}
+
 fn idle_fn(umwelt Result) Result {
 	println('I, am juste chilling')
-	mut res := Result{}
-	res['doing'] = int(Task.working)
-	return res
+	return action_fn(umwelt, 'doing', int(Task.working))
 }
 
 fn exhaust_fn(umwelt Result) Result {
 	println('I, am not exhaust anymore')
-	mut res := Result{}
-	res['doing'] = int(Task.idle)
-	return res
+	return  action_fn(umwelt, 'doing', int(Task.idle))
 }
 
 fn work_fn(umwelt Result) Result {
 	println('I, am working')
-	mut res := Result{}
-	res['doing'] = int(Task.exhaust)
-	return res
+	return  action_fn(umwelt, 'doing', int(Task.exhaust))
 }
 
 // Use:
