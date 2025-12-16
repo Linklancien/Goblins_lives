@@ -131,7 +131,7 @@ fn is_working(umwelt Result) bool {
 }
 
 // actions
-fn action_fn(umwelt Result, key string, value int) Result{
+fn action_fn(umwelt Result, key string, value int) Result {
 	mut res := Result{}
 	res[key] = value
 	return res
@@ -144,12 +144,12 @@ fn change_to_work(umwelt Result) Result {
 
 fn change_to_idle(umwelt Result) Result {
 	println('I, am not exhaust anymore')
-	return  action_fn(umwelt, 'doing', int(Task.idle))
+	return action_fn(umwelt, 'doing', int(Task.idle))
 }
 
 fn change_to_exhaust(umwelt Result) Result {
 	println('I, am working')
-	return  action_fn(umwelt, 'doing', int(Task.exhaust))
+	return action_fn(umwelt, 'doing', int(Task.exhaust))
 }
 
 // Use:
