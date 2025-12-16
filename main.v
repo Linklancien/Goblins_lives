@@ -70,10 +70,10 @@ fn create_basic() &Gobs {
 		brain: Conditionnal_node{
 			evaluation: is_working
 			true_next:  Action_node{
-				action: work_fn
+				action: change_to_idle
 			}
 			false_next: Action_node{
-				action: idle_fn
+				action: change_to_work
 			}
 		}
 	}
@@ -90,7 +90,7 @@ fn random_brain(depth int, proba_action f64) Node {
 	mut node := Node{}
 
 	if depth == 0 && rand.bernoulli(proba_action) or { panic('Bernouilli failled ${depth}') } {
-		// asfn := [idle_fn, exhaust_fn, work_fn]
+		// asfn := [change_to_work_fn, change_to_idle_fn, work_fn]
 		// afn := rand.element[Action_fn](asfn) or {
 		// 	panic('At depth == ${depth}, rand action failled with prob: ${proba_action}')
 		// }
@@ -137,17 +137,17 @@ fn action_fn(umwelt Result, key string, value int) Result{
 	return res
 }
 
-fn idle_fn(umwelt Result) Result {
+fn change_to_work(umwelt Result) Result {
 	println('I, am juste chilling')
 	return action_fn(umwelt, 'doing', int(Task.working))
 }
 
-fn exhaust_fn(umwelt Result) Result {
+fn change_to_idle(umwelt Result) Result {
 	println('I, am not exhaust anymore')
 	return  action_fn(umwelt, 'doing', int(Task.idle))
 }
 
-fn work_fn(umwelt Result) Result {
+fn change_to_exhaust(umwelt Result) Result {
 	println('I, am working')
 	return  action_fn(umwelt, 'doing', int(Task.exhaust))
 }
