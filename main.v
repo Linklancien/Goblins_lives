@@ -54,9 +54,16 @@ fn main() {
 }
 
 fn on_frame(mut welt Welt) {
+	for i, mut gob in mut welt.gobs{
+		umwelt := welt.get_umwelt(i)
+		gob.current_task.update(umwelt)
+		println('time: ${gob.current_task.timer}')
+	}
+	
 	for i, gob in welt.gobs {
 		gob.reflect(mut welt, i)
 	}
+	println('wood: ${welt.wood}')
 }
 
 // Gobs
@@ -80,6 +87,7 @@ enum Name{
 }
 
 enum States{
+  ended
   working
   blocked
 }
@@ -112,6 +120,7 @@ fn (mut task Task) update(umwelt Result) Result{
 	
 	// b:
 	if task.timer <= 0{
+		task.state = .ended
 		return task.effect()
 	}
 	
@@ -133,6 +142,7 @@ fn (mut task Task) update(umwelt Result) Result{
 				task.state = .working	
 			}
 		}
+		else{}
 	}
 	return Result{}
 }
@@ -140,7 +150,8 @@ fn (mut task Task) update(umwelt Result) Result{
 fn (task Task) is_doable(umwelt Result) bool{
 	match task.name{
 		.woodcutting{
-			return umwelt['localisation'] == 1.0
+			return true
+			// return umwelt['localisation'] == 1.0
 		}
 		else{}
 	}
@@ -163,12 +174,9 @@ fn (task Task) effect() Result{
 fn create_basic() &Gobs {
 	return &Gobs{
 		brain: Conditionnal_node{
-			evaluation: is_working
+			evaluation: is_ended
 			true_next:  Action_node{
-				action: change_to_idle
-			}
-			false_next: Action_node{
-				action: change_to_work
+				action: change_to_woodcutting
 			}
 		}
 	}
@@ -190,7 +198,7 @@ fn random_brain(depth int, proba_action f64) Node {
 		// 	panic('At depth == ${depth}, rand action failled with prob: ${proba_action}')
 		// }
 		// node = Action_node{
-		// 	action: afn
+		// 	action: afn²
 		// }
 	} else {
 		// csfn := [is_exhaust, is_working]
@@ -216,13 +224,20 @@ fn is_key_equal_value(umwelt Result, key string, value int) bool {
 	return umwelt[key] == value
 }
 
+fn is_wood_cutting(umwelt Result) bool {
+	return is_key_equal_value(umwelt, 'task_name', int(Name.woodcutting))
+}
+
 fn is_blocked(umwelt Result) bool {
-	return is_key_equal_value(umwelt, 'task_name', int(States.blocked))
+	return is_key_equal_value(umwelt, 'task_state', int(States.blocked))
+}
+
+fn is_ended(umwelt Result) bool {
+	return is_key_equal_value(umwelt, 'task_state', int(States.ended))
 }
 
 fn is_working(umwelt Result) bool {
-	println('Am I working ? ${umwelt['task_name'] == int(States.working)} ')
-	return is_key_equal_value(umwelt, 'task_name', int(States.working))
+	return is_key_equal_value(umwelt, 'task_state', int(States.working))
 }
 
 // actions
@@ -232,18 +247,15 @@ fn action_fn(umwelt Result, key string, value int) Result {
 	return res
 }
 
-fn change_to_work(umwelt Result) Result {
-	println('I am now working')
+fn change_to_woodcutting(umwelt Result) Result {
 	return action_fn(umwelt, 'task_name', int(Name.woodcutting))
 }
 
 fn change_to_idle(umwelt Result) Result {
-	println('I am now IDLE')
 	return action_fn(umwelt, 'task_name', int(Name.idle))
 }
 
 // fn change_to_exhaust(umwelt Result) Result {
-// 	println('I, am working')
 // 	return action_fn(umwelt, 'task_name', int(Name.exhaust))
 // }
 
