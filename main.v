@@ -24,12 +24,13 @@ fn (welt Welt) get_umwelt(id int) Result {
 fn (mut welt Welt) apply(changes Result, id int) {	
 	if current_task := changes['task_name'] {
 		// change the current task of the selected gob
-		welt.gobs[id].current_task = Task.from(int(current_task)) or {
+		name :=  Name.from(int(current_task)) or {
 			panic('error, current_task could not change in apply')
 		}
+		welt.gobs[id].current_task = create_from_name(name)
 	}
 	if wood_cut := changes['wood']{
-		welt.wood += wood_cut
+		welt.wood += int(wood_cut)
 	}
 }
 
@@ -40,7 +41,7 @@ fn main() {
 		width:         600
 		height:        600
 		create_window: true
-		window_titlc:  '-Goblins Lives-'
+		window_title:  '-Goblins Lives-'
 		bg_color:      gg.gray
 		user_data:     welt
 		frame_fn:      on_frame
@@ -78,9 +79,24 @@ enum Name{
 	woodcutting
 }
 
-enum Sates{
+enum States{
   working
   blocked
+}
+
+fn create_from_name(name Name) &Task{
+	match name{
+		.idle{
+			return &Task{}
+		}
+		.woodcutting{
+			return &Task{
+				name: name
+				state: .working
+				timer: 10 //init time for this task
+			}
+		}
+	}
 }
 
 // a: handle the case where the task is idle
@@ -123,21 +139,24 @@ fn (mut task Task) update(umwelt Result) Result{
 
 fn (task Task) is_doable(umwelt Result) bool{
 	match task.name{
-		woodcutting{
+		.woodcutting{
 			return umwelt['localisation'] == 1.0
 		}
+		else{}
 	}
-	panic('Case not handled ${task}, ${uwmelt}')
+	panic('Case not handled in is_doable ${task}, ${umwelt}')
 }
 
 fn (task Task) effect() Result{
 	mut res := Result{}
 	match task.name{
-		woodcutting{
+		.woodcutting{
 			res["wood"] = 1
 			return res
 		}
+		else {}
 	}
+	panic('Case not handled in effect ${task}')
 }
 
 // Init:
@@ -228,3 +247,10 @@ fn change_to_exhaust(umwelt Result) Result {
 	return action_fn(umwelt, 'task_name', int(Task.exhaust))
 }
 
+// Use:
+fn (gob Gobs) reflect(mut welt Welt, id int) {
+	// reflect
+	res := gob.brain.do(welt.get_umwelt(id))
+	// act
+	welt.apply(res, id)
+}
