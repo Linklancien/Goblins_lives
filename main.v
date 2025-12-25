@@ -118,9 +118,9 @@ fn (mut task Task) update(umwelt Result) Result{
 	// c:
 	// d:
 	// e:
-	doable := taks.is_doable(umwelt)
+	doable := task.is_doable(umwelt)
 	match task.state{
-		working{
+		.working{
 			if doable{
 				task.timer -= 1
 			}
@@ -128,7 +128,7 @@ fn (mut task Task) update(umwelt Result) Result{
 				task.state = .blocked	
 			}
 		}
-		blocked{
+		.blocked{
 			if doable{
 				task.state = .working	
 			}
@@ -216,13 +216,13 @@ fn is_key_equal_value(umwelt Result, key string, value int) bool {
 	return umwelt[key] == value
 }
 
-fn is_exhaust(umwelt Result) bool {
-	return is_key_equal_value(umwelt, 'task_name', int(Task.exhaust))
+fn is_blocked(umwelt Result) bool {
+	return is_key_equal_value(umwelt, 'task_name', int(States.blocked))
 }
 
 fn is_working(umwelt Result) bool {
-	println('Am I working ? ${umwelt['task_name'] == int(Task.working)} ')
-	return is_key_equal_value(umwelt, 'task_name', int(Task.working))
+	println('Am I working ? ${umwelt['task_name'] == int(States.working)} ')
+	return is_key_equal_value(umwelt, 'task_name', int(States.working))
 }
 
 // actions
@@ -233,19 +233,19 @@ fn action_fn(umwelt Result, key string, value int) Result {
 }
 
 fn change_to_work(umwelt Result) Result {
-	println('I, am juste chilling')
-	return action_fn(umwelt, 'task_name', int(Task.working))
+	println('I am now working')
+	return action_fn(umwelt, 'task_name', int(Name.woodcutting))
 }
 
 fn change_to_idle(umwelt Result) Result {
-	println('I, am not exhaust anymore')
-	return action_fn(umwelt, 'task_name', int(Task.idle))
+	println('I am now IDLE')
+	return action_fn(umwelt, 'task_name', int(Name.idle))
 }
 
-fn change_to_exhaust(umwelt Result) Result {
-	println('I, am working')
-	return action_fn(umwelt, 'task_name', int(Task.exhaust))
-}
+// fn change_to_exhaust(umwelt Result) Result {
+// 	println('I, am working')
+// 	return action_fn(umwelt, 'task_name', int(Name.exhaust))
+// }
 
 // Use:
 fn (gob Gobs) reflect(mut welt Welt, id int) {
