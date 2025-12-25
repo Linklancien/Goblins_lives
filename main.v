@@ -2,7 +2,7 @@ module main
 
 import linklancien.decision_graph { Action_node, Conditionnal_node, Node, Result }
 import rand
-// import linklancien.gg_plot
+import linklancien.gg_plot
 import gg
 
 // Welt
@@ -11,6 +11,8 @@ mut:
 	ctx  &gg.Context = unsafe { nil }
 	wood int
 	gobs []Gobs
+	time int
+	dia gg_plot.Diagram
 }
 
 fn (welt Welt) get_umwelt(id int) Result {
@@ -49,21 +51,42 @@ fn main() {
 	)
 	welt.gobs << create_basic()
 	// welt.gobs << creat_random(2, 0.5)
-	println(welt.gobs)
+	welt.dia = gg_plot.plot([[f32(0)]], [[f32(0)]], [gg.red])
+	welt.dia.change_pos(50, 50)
+	welt.dia.change_size(600, 500)
+	welt.dia.border_size(30)
+	welt.dia.corner_size(15)
+	welt.dia.title('Evolution of the quantity of wood')
+	welt.dia.x_label('Time in frames')
+	welt.dia.y_label('Wood in red')
+	
 	welt.ctx.run()
 }
 
 fn on_frame(mut welt Welt) {
+	welt.time += 1
+	// updates
 	for i, mut gob in mut welt.gobs{
 		umwelt := welt.get_umwelt(i)
-		gob.current_task.update(umwelt)
-		println('time: ${gob.current_task.timer}')
+		res := gob.current_task.update(umwelt)
+		// act
+		welt.apply(res, i)
 	}
 	
 	for i, gob in welt.gobs {
 		gob.reflect(mut welt, i)
 	}
-	println('wood: ${welt.wood}')
+	
+	welt.update_graph()
+	
+	// RENDER:
+	welt.ctx.begin()
+	welt.dia.render(welt.ctx)
+	welt.ctx.end()
+}
+
+fn (mut welt Welt) update_graph(){
+	welt.dia.extend_curve(0,  [f32(welt.time)], [f32(welt.wood)])	
 }
 
 // Gobs
