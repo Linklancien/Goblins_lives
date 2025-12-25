@@ -9,21 +9,27 @@ import gg
 struct Welt {
 mut:
 	ctx  &gg.Context = unsafe { nil }
+	wood int
 	gobs []Gobs
 }
 
 fn (welt Welt) get_umwelt(id int) Result {
 	mut umwelt := Result{}
-	umwelt['current_task'] = int(welt.gobs[id].current_task)
+	umwelt['task_name'] = int(welt.gobs[id].current_task.name)
+	umwelt['task_state'] = int(welt.gobs[id].current_task.state)
+	umwelt['task_timer'] = int(welt.gobs[id].current_task.state)
 	return umwelt
 }
 
 fn (mut welt Welt) apply(changes Result, id int) {	
-	if current_task := changes['current_task'] {
+	if current_task := changes['task_name'] {
 		// change the current task of the selected gob
 		welt.gobs[id].current_task = Task.from(int(current_task)) or {
 			panic('error, current_task could not change in apply')
 		}
+	}
+	if wood_cut := changes['wood']{
+		welt.wood += wood_cut
 	}
 }
 
@@ -192,12 +198,12 @@ fn is_key_equal_value(umwelt Result, key string, value int) bool {
 }
 
 fn is_exhaust(umwelt Result) bool {
-	return is_key_equal_value(umwelt, 'current_task', int(Task.exhaust))
+	return is_key_equal_value(umwelt, 'task_name', int(Task.exhaust))
 }
 
 fn is_working(umwelt Result) bool {
-	println('Am I working ? ${umwelt['current_task'] == int(Task.working)} ')
-	return is_key_equal_value(umwelt, 'current_task', int(Task.working))
+	println('Am I working ? ${umwelt['task_name'] == int(Task.working)} ')
+	return is_key_equal_value(umwelt, 'task_name', int(Task.working))
 }
 
 // actions
@@ -209,16 +215,16 @@ fn action_fn(umwelt Result, key string, value int) Result {
 
 fn change_to_work(umwelt Result) Result {
 	println('I, am juste chilling')
-	return action_fn(umwelt, 'current_task', int(Task.working))
+	return action_fn(umwelt, 'task_name', int(Task.working))
 }
 
 fn change_to_idle(umwelt Result) Result {
 	println('I, am not exhaust anymore')
-	return action_fn(umwelt, 'current_task', int(Task.idle))
+	return action_fn(umwelt, 'task_name', int(Task.idle))
 }
 
 fn change_to_exhaust(umwelt Result) Result {
 	println('I, am working')
-	return action_fn(umwelt, 'current_task', int(Task.exhaust))
+	return action_fn(umwelt, 'task_name', int(Task.exhaust))
 }
 
