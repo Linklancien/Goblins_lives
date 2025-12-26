@@ -33,15 +33,15 @@ fn (mut welt Welt) apply(changes Result, id int) {
 	}
 	if wood_cut := changes['wood']{
 		welt.wood += int(wood_cut)
-	}
+	} 
 }
 
 fn main() {
 	mut welt := &Welt{}
 	welt.ctx = gg.new_context(
 		fullscreen:    false
-		width:         600
-		height:        600
+		width:         600 + 2*50
+		height:        500 + 2*50
 		create_window: true
 		window_title:  '-Goblins Lives-'
 		bg_color:      gg.gray
