@@ -1,6 +1,6 @@
 module main
 
-import linklancien.decision_graph { Action_node, Conditionnal_node, Node, Result }
+import linklancien.decision_graph { Action_fn, Evaluation_fn, Action_node, Conditionnal_node, Node, Result }
 import rand
 import linklancien.gg_plot
 import gg
@@ -216,26 +216,26 @@ fn random_brain(depth int, proba_action f64) Node {
 	mut node := Node{}
 
 	if depth == 0 && rand.bernoulli(proba_action) or { panic('Bernouilli failled ${depth}') } {
-		// asfn := [change_to_work_fn, change_to_idle_fn, work_fn]
-		// afn := rand.element[Action_fn](asfn) or {
-		// 	panic('At depth == ${depth}, rand action failled with prob: ${proba_action}')
-		// }
-		// node = Action_node{
-		// 	action: afn²
-		// }
+		asfn := [change_to_woodcutting, change_to_idle]
+		afn := rand.element[Action_fn](asfn) or {
+			panic('At depth == ${depth}, rand action failled with prob: ${proba_action}')
+		}
+		node = Action_node{
+			action: afn
+		}
 	} else {
-		// csfn := [is_exhaust, is_working]
-		// cfn := rand.element[Evaluation_fn](csfn) or {
-		// 	panic('At depth == ${depth}, rand conditionnal failled with prob: ${proba_action}')
-		// }
-		// nodet := random_brain(depth - 1, proba_action)
-		// nodef := random_brain(depth - 1, proba_action)
+		csfn := [is_wood_cutting, is_blocked, is_ended, is_working]
+		cfn := rand.element[Evaluation_fn](csfn) or {
+			panic('At depth == ${depth}, rand conditionnal failled with prob: ${proba_action}')
+		}
+		nodet := random_brain(depth - 1, proba_action)
+		nodef := random_brain(depth - 1, proba_action)
 
-		// node = Conditionnal_node{
-		// 	evaluation: cfn
-		// 	true_next:  nodet
-		// 	false_next: nodef
-		// }
+		node = Conditionnal_node{
+			evaluation: cfn
+			true_next:  nodet
+			false_next: nodef
+		}
 	}
 
 	return node
