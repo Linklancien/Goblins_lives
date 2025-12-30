@@ -1,6 +1,6 @@
 module main
 
-import linklancien.decision_graph { Action_fn, Evaluation_fn, Action_node, Conditionnal_node, Node, Result }
+import linklancien.decision_graph { Action_fn, Action_node, Conditionnal_node, Evaluation_fn, Node, Result }
 import rand
 import linklancien.gg_plot
 import gg
@@ -12,7 +12,7 @@ mut:
 	wood int
 	gobs []Gobs
 	time int
-	dia gg_plot.Diagram
+	dia  gg_plot.Diagram
 }
 
 fn (welt Welt) get_umwelt(id int) Result {
@@ -23,25 +23,25 @@ fn (welt Welt) get_umwelt(id int) Result {
 	return umwelt
 }
 
-fn (mut welt Welt) apply(changes Result, id int) {	
+fn (mut welt Welt) apply(changes Result, id int) {
 	if current_task := changes['task_name'] {
 		// change the current task of the selected gob
-		name :=  Name.from(int(current_task)) or {
+		name := Name.from(int(current_task)) or {
 			panic('error, current_task could not change in apply')
 		}
 		welt.gobs[id].current_task = create_from_name(name)
 	}
-	if wood_cut := changes['wood']{
+	if wood_cut := changes['wood'] {
 		welt.wood += int(wood_cut)
-	} 
+	}
 }
 
 fn main() {
 	mut welt := &Welt{}
 	welt.ctx = gg.new_context(
 		fullscreen:    false
-		width:         600 + 2*50
-		height:        500 + 2*50
+		width:         600 + 2 * 50
+		height:        500 + 2 * 50
 		create_window: true
 		window_title:  '-Goblins Lives-'
 		bg_color:      gg.gray
@@ -49,8 +49,9 @@ fn main() {
 		frame_fn:      on_frame
 		sample_count:  4
 	)
-	welt.gobs << create_basic()
+	// welt.gobs << create_basic()
 	// welt.gobs << creat_random(2, 0.5)
+	// panic(welt.gobs)
 	welt.dia = gg_plot.plot([[f32(0)]], [[f32(0)]], [gg.red])
 	welt.dia.change_pos(50, 50)
 	welt.dia.change_size(600, 500)
@@ -59,34 +60,34 @@ fn main() {
 	welt.dia.title('Evolution of the quantity of wood')
 	welt.dia.x_label('Time in frames')
 	welt.dia.y_label('Wood in red')
-	
+
 	welt.ctx.run()
 }
 
 fn on_frame(mut welt Welt) {
 	welt.time += 1
 	// updates
-	for i, mut gob in mut welt.gobs{
+	for i, mut gob in mut welt.gobs {
 		umwelt := welt.get_umwelt(i)
 		res := gob.current_task.update(umwelt)
 		// act
 		welt.apply(res, i)
 	}
-	
+
 	for i, gob in welt.gobs {
 		gob.reflect(mut welt, i)
 	}
-	
+
 	welt.update_graph()
-	
+
 	// RENDER:
 	welt.ctx.begin()
 	welt.dia.render(welt.ctx)
 	welt.ctx.end()
 }
 
-fn (mut welt Welt) update_graph(){
-	welt.dia.extend_curve(0,  [f32(welt.time)], [f32(welt.wood)])	
+fn (mut welt Welt) update_graph() {
+	welt.dia.extend_curve(0, [f32(welt.time)], [f32(welt.wood)])
 }
 
 // Gobs
@@ -97,34 +98,34 @@ mut:
 }
 
 // Task
-struct Task{
+struct Task {
 mut:
-  name Name
-  state States
-  timer int // u8 ?
+	name  Name
+	state States
+	timer int // u8 ?
 }
 
-enum Name{
+enum Name {
 	idle
 	woodcutting
 }
 
-enum States{
-  ended
-  working
-  blocked
+enum States {
+	ended
+	working
+	blocked
 }
 
-fn create_from_name(name Name) &Task{
-	match name{
-		.idle{
+fn create_from_name(name Name) &Task {
+	match name {
+		.idle {
 			return &Task{}
 		}
-		.woodcutting{
+		.woodcutting {
 			return &Task{
-				name: name
+				name:  name
 				state: .working
-				timer: 10 //init time for this task
+				timer: 10 // init time for this task
 			}
 		}
 	}
@@ -135,57 +136,56 @@ fn create_from_name(name Name) &Task{
 // c: find witch task is currently in progress
 // d: check if the work can be done - (if not change state to blocked so returns)
 // e: if it can be done, timer -= 1 an returns
-fn (mut task Task) update(umwelt Result) Result{
+fn (mut task Task) update(umwelt Result) Result {
 	// a:
 	if task.name == .idle {
 		return Result{}
 	}
-	
+
 	// b:
-	if task.timer <= 0{
+	if task.timer <= 0 {
 		task.state = .ended
 		return task.effect()
 	}
-	
+
 	// c:
 	// d:
 	// e:
 	doable := task.is_doable(umwelt)
-	match task.state{
-		.working{
-			if doable{
+	match task.state {
+		.working {
+			if doable {
 				task.timer -= 1
-			}
-			else{
-				task.state = .blocked	
-			}
-		}
-		.blocked{
-			if doable{
-				task.state = .working	
+			} else {
+				task.state = .blocked
 			}
 		}
-		else{}
+		.blocked {
+			if doable {
+				task.state = .working
+			}
+		}
+		else {}
 	}
 	return Result{}
 }
 
-fn (task Task) is_doable(umwelt Result) bool{
-	match task.name{
-		.woodcutting{
+fn (task Task) is_doable(umwelt Result) bool {
+	match task.name {
+		.woodcutting {
 			return true
 			// return umwelt['localisation'] == 1.0
 		}
-		else{}
+		else {}
 	}
 	panic('Case not handled in is_doable ${task}, ${umwelt}')
 }
 
-fn (task Task) effect() Result{
+fn (task Task) effect() Result {
 	mut res := Result{}
-	match task.name{
-		.woodcutting{
-			res["wood"] = 1
+	match task.name {
+		.woodcutting {
+			res['wood'] = 1
 			return res
 		}
 		else {}
