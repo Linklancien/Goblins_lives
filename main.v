@@ -6,7 +6,9 @@ import linklancien.gg_plot
 import gg
 
 const csfn = [is_wood_cutting, is_blocked, is_ended, is_working]
+const csfn_name = ["is_wood_cutting", "is_blocked", "is_ended", "is_working"]
 const asfn = [change_to_woodcutting, change_to_idle]
+const asfn_name = ["change_to_woodcutting", "change_to_idle"]
 
 // Welt
 struct Welt {
@@ -238,7 +240,7 @@ fn random_brain(depth int, proba_action f64) Node {
 		nodef := random_brain(depth - 1, proba_action)
 
 		node = Conditionnal_node{
-			name:       cfn_name
+			eval_name:       cfn_name
 			evaluation: cfn
 			true_next:  nodet
 			false_next: nodef
