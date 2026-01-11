@@ -13,11 +13,18 @@ const asfn_name = ['change_to_woodcutting', 'change_to_idle']
 // Welt
 struct Welt {
 mut:
-	ctx  &gg.Context = unsafe { nil }
-	wood int
-	gobs []Gobs
-	time int
-	dia  gg_plot.Diagram
+	ctx        &gg.Context = unsafe { nil }
+	wood       int
+	gobs       []Gobs
+	time       int
+	run_method Run_method = .pause
+	dia        gg_plot.Diagram
+}
+
+enum Run_method {
+	pause
+	step
+	run
 }
 
 fn (welt Welt) get_umwelt(id int) Result {
@@ -52,6 +59,7 @@ fn main() {
 		bg_color:      gg.gray
 		user_data:     welt
 		frame_fn:      on_frame
+		event_fn:      on_event
 		sample_count:  4
 	)
 	welt.gobs << create_basic()
@@ -70,6 +78,24 @@ fn main() {
 }
 
 fn on_frame(mut welt Welt) {
+	match welt.run_method {
+		.run {
+			welt.gobs_update()
+		}
+		.step {
+			welt.gobs_update()
+			welt.run_method = .pause
+		}
+		else {}
+	}
+
+	// RENDER:
+	welt.ctx.begin()
+	welt.dia.render(welt.ctx)
+	welt.ctx.end()
+}
+
+fn (mut welt Welt) gobs_update() {
 	welt.time += 1
 	// updates
 	for i, mut gob in mut welt.gobs {
@@ -84,11 +110,33 @@ fn on_frame(mut welt Welt) {
 	}
 
 	welt.update_graph()
+}
 
-	// RENDER:
-	welt.ctx.begin()
-	welt.dia.render(welt.ctx)
-	welt.ctx.end()
+fn on_event(e &gg.Event, mut welt Welt) {
+	match e.typ {
+		.key_down {
+			match e.key_code {
+				.f4 {
+					welt.ctx.quit()
+				}
+				.space {
+					match welt.run_method {
+						.pause {
+							welt.run_method = .step
+						}
+						else {
+							welt.run_method = .pause
+						}
+					}
+				}
+				.enter {
+					welt.run_method = .run
+				}
+				else {}
+			}
+		}
+		else {}
+	}
 }
 
 fn (mut welt Welt) update_graph() {
@@ -213,8 +261,8 @@ fn create_basic() &Gobs {
 			eval_name:  'is_ended'
 			evaluation: is_ended
 			true_next:  Action_node{
-				name: 'change_to_woodcutting'
-				action:     change_to_woodcutting
+				name:   'change_to_woodcutting'
+				action: change_to_woodcutting
 			}
 		}
 	}
