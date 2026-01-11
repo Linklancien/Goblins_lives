@@ -6,9 +6,9 @@ import linklancien.gg_plot
 import gg
 
 const csfn = [is_wood_cutting, is_blocked, is_ended, is_working]
-const csfn_name = ["is_wood_cutting", "is_blocked", "is_ended", "is_working"]
+const csfn_name = ['is_wood_cutting', 'is_blocked', 'is_ended', 'is_working']
 const asfn = [change_to_woodcutting, change_to_idle]
-const asfn_name = ["change_to_woodcutting", "change_to_idle"]
+const asfn_name = ['change_to_woodcutting', 'change_to_idle']
 
 // Welt
 struct Welt {
@@ -34,7 +34,7 @@ fn (mut welt Welt) apply(changes Result, id int) {
 		name := Name.from(int(current_task)) or {
 			panic('error, current_task could not change in apply')
 		}
-		welt.gobs[id].current_task = create_from_name(name)
+		welt.gobs[id].current_task = create_task_from_name(name)
 	}
 	if wood_cut := changes['wood'] {
 		welt.wood += int(wood_cut)
@@ -54,8 +54,8 @@ fn main() {
 		frame_fn:      on_frame
 		sample_count:  4
 	)
-	// welt.gobs << create_basic()
-	welt.gobs << creat_random(2, 0.5)
+	welt.gobs << create_basic()
+	// welt.gobs << creat_random(2, 0.5)
 	print(welt.gobs)
 	welt.dia = gg_plot.plot([[f32(0)]], [[f32(0)]], [gg.red])
 	welt.dia.change_pos(50, 50)
@@ -102,6 +102,14 @@ mut:
 	current_task Task
 }
 
+// Use:
+fn (gob Gobs) reflect(mut welt Welt, id int) {
+	// reflect
+	res := gob.brain.do(welt.get_umwelt(id))
+	// act
+	welt.apply(res, id)
+}
+
 // Task
 struct Task {
 mut:
@@ -121,7 +129,7 @@ enum States {
 	blocked
 }
 
-fn create_from_name(name Name) &Task {
+fn create_task_from_name(name Name) &Task {
 	match name {
 		.idle {
 			return &Task{}
@@ -202,14 +210,17 @@ fn (task Task) effect() Result {
 fn create_basic() &Gobs {
 	return &Gobs{
 		brain: Conditionnal_node{
+			eval_name:  'is_ended'
 			evaluation: is_ended
 			true_next:  Action_node{
-				action: change_to_woodcutting
+				name: 'change_to_woodcutting'
+				action:     change_to_woodcutting
 			}
 		}
 	}
 }
 
+// Form scratch
 fn creat_random(depth int, proba_action f64) &Gobs {
 	brain := random_neuron(depth, proba_action)
 	return &Gobs{
@@ -240,7 +251,7 @@ fn random_neuron(depth int, proba_action f64) Node {
 		nodef := random_neuron(depth - 1, proba_action)
 
 		node = Conditionnal_node{
-			eval_name:       cfn_name
+			eval_name:  cfn_name
 			evaluation: cfn
 			true_next:  nodet
 			false_next: nodef
@@ -250,7 +261,7 @@ fn random_neuron(depth int, proba_action f64) Node {
 	return node
 }
 
-// brain neurones
+// brain neurons
 // conditional
 fn is_key_equal_value(umwelt Result, key string, value int) bool {
 	return umwelt[key] == value
@@ -290,11 +301,3 @@ fn change_to_idle(umwelt Result) Result {
 // fn change_to_exhaust(umwelt Result) Result {
 // 	return action_fn(umwelt, 'task_name', int(Name.exhaust))
 // }
-
-// Use:
-fn (gob Gobs) reflect(mut welt Welt, id int) {
-	// reflect
-	res := gob.brain.do(welt.get_umwelt(id))
-	// act
-	welt.apply(res, id)
-}
