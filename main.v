@@ -211,13 +211,13 @@ fn create_basic() &Gobs {
 }
 
 fn creat_random(depth int, proba_action f64) &Gobs {
-	brain := random_brain(depth, proba_action)
+	brain := random_neuron(depth, proba_action)
 	return &Gobs{
 		brain: brain
 	}
 }
 
-fn random_brain(depth int, proba_action f64) Node {
+fn random_neuron(depth int, proba_action f64) Node {
 	mut node := Node{}
 
 	if depth == 0 || rand.bernoulli(proba_action) or { panic('Bernouilli failled ${depth}') } {
@@ -236,8 +236,8 @@ fn random_brain(depth int, proba_action f64) Node {
 		}
 		cfn := csfn[id]
 		cfn_name := csfn_name[id]
-		nodet := random_brain(depth - 1, proba_action)
-		nodef := random_brain(depth - 1, proba_action)
+		nodet := random_neuron(depth - 1, proba_action)
+		nodef := random_neuron(depth - 1, proba_action)
 
 		node = Conditionnal_node{
 			eval_name:       cfn_name
