@@ -58,6 +58,7 @@ fn (mut welt Welt) new_gen() {
 	welt.time = 0
 	welt.gen += 1
 	welt.dia.add_curve([f32(0)], [f32(0)], gg.blue)
+	println('Here comes the ${welt.gen}th generation')
 	// resources reset
 	welt.wood = 0
 	// population mutation
@@ -92,8 +93,7 @@ fn main() {
 		sample_count:  4
 	)
 	welt.gobs << create_basic()
-	// welt.gobs << creat_random(2, 0.5)
-	print(welt.gobs)
+	// welt.gobs << create_random(2, 0.5)
 	welt.dia = gg_plot.plot([[f32(0)]], [[f32(0)]], [gg.red])
 	welt.dia.change_pos(50, 50)
 	welt.dia.change_size(600, 500)
@@ -308,7 +308,7 @@ fn create_basic() &Gobs {
 }
 
 // Form scratch
-fn creat_random(depth int, proba_action f64) &Gobs {
+fn create_random(depth int, proba_action f64) &Gobs {
 	brain := random_neuron(depth, proba_action)
 	return &Gobs{
 		brain: brain
