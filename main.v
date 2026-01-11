@@ -13,12 +13,17 @@ const asfn_name = ['change_to_woodcutting', 'change_to_idle']
 // Welt
 struct Welt {
 mut:
-	ctx        &gg.Context = unsafe { nil }
-	wood       int
-	gobs       []Gobs
+	ctx &gg.Context = unsafe { nil }
+	// external
+	gen        int
 	time       int
+	max_time   int        = 100
 	run_method Run_method = .pause
 	dia        gg_plot.Diagram
+	// population
+	gobs []Gobs
+	// resources
+	wood int
 }
 
 enum Run_method {
@@ -46,6 +51,19 @@ fn (mut welt Welt) apply(changes Result, id int) {
 	if wood_cut := changes['wood'] {
 		welt.wood += int(wood_cut)
 	}
+}
+
+fn (mut welt Welt) new_gen() {
+	// external update
+	welt.time = 0
+	welt.gen += 1
+	welt.dia.add_curve([f32(0)], [f32(0)], gg.blue)
+	// resources reset
+	welt.wood = 0
+	// population mutation
+	welt.gobs = []Gobs{}
+	welt.gobs << create_basic()
+	// will be changed with mutations and so
 }
 
 fn main() {
@@ -87,6 +105,10 @@ fn on_frame(mut welt Welt) {
 			welt.run_method = .pause
 		}
 		else {}
+	}
+
+	if welt.time == welt.max_time {
+		welt.new_gen()
 	}
 
 	// RENDER:
@@ -140,7 +162,7 @@ fn on_event(e &gg.Event, mut welt Welt) {
 }
 
 fn (mut welt Welt) update_graph() {
-	welt.dia.extend_curve(0, [f32(welt.time)], [f32(welt.wood)])
+	welt.dia.extend_curve(welt.gen, [f32(welt.time)], [f32(welt.wood)])
 }
 
 // Gobs
