@@ -50,8 +50,8 @@ fn main() {
 		sample_count:  4
 	)
 	// welt.gobs << create_basic()
-	// welt.gobs << creat_random(2, 0.5)
-	// panic(welt.gobs)
+	welt.gobs << creat_random(2, 0.5)
+	panic(welt.gobs)
 	welt.dia = gg_plot.plot([[f32(0)]], [[f32(0)]], [gg.red])
 	welt.dia.change_pos(50, 50)
 	welt.dia.change_size(600, 500)
@@ -214,8 +214,8 @@ fn creat_random(depth int, proba_action f64) &Gobs {
 
 fn random_brain(depth int, proba_action f64) Node {
 	mut node := Node{}
-
-	if depth == 0 && rand.bernoulli(proba_action) or { panic('Bernouilli failled ${depth}') } {
+	
+	if depth == 0 || rand.bernoulli(proba_action) or { panic('Bernouilli failled ${depth}') } {
 		asfn := [change_to_woodcutting, change_to_idle]
 		afn := rand.element[Action_fn](asfn) or {
 			panic('At depth == ${depth}, rand action failled with prob: ${proba_action}')
