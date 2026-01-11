@@ -61,8 +61,19 @@ fn (mut welt Welt) new_gen() {
 	// resources reset
 	welt.wood = 0
 	// population mutation
+	// selection
+	mut gobs_selected := []Gobs{}
+	for gob in welt.gobs{
+		if true{
+			// need to be change by a real condition
+			gobs_selected << gob
+		}
+	}
+	// new gen
 	welt.gobs = []Gobs{}
-	welt.gobs << create_basic()
+	for gob in gobs_selected{
+		welt.gobs << gob.get_mutated()
+	}
 	// will be changed with mutations and so
 }
 
@@ -180,6 +191,12 @@ fn (gob Gobs) reflect(mut welt Welt, id int) {
 	welt.apply(res, id)
 }
 
+// mutations:
+fn (gob Gobs) get_mutated() &Gobs{
+	return &Gobs{
+		brain: gob.brain
+	}
+}
 // Task
 struct Task {
 mut:
